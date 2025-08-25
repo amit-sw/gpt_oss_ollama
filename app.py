@@ -6,16 +6,13 @@ import requests
 from openai import OpenAI
 import threading
 import time
+from dotenv import load_dotenv
 
-#client = OpenAI(
-#    base_url="http://localhost:11434/v1",  # Ollama's default API endpoint
-#    api_key="ollama"                        # Dummy key, not used by Ollama
-#)
+load_dotenv(override=True)
+client_llama = OpenAI(base_url="http://localhost:8080/v1",api_key="llama_cpp") # Dummy key, not used by Llama_cpp
+client_api = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-client = OpenAI(
-    base_url="http://localhost:8080/v1",  # Llama_cpp's default API endpoint
-    api_key="llama_cpp"                    # Dummy key, not used by Llama_cpp
-)
+#print(f"Environment variables: {os.getenv('OPENAI_API_KEY')=}, {os.getenv('OPENAI_MODEL')=}")
 
 
 def configure_logging():
@@ -28,10 +25,10 @@ def configure_logging():
     logging.basicConfig(level=level_value, format="%(asctime)s %(levelname)s %(message)s", handlers=handlers)
     logging.getLogger("streamlit").setLevel(logging.WARNING)
 
-def get_ollama_response(prompt):
+def get_gpt_response(prompt, client, model):
     logger = logging.getLogger("app")
     response = client.chat.completions.create(
-        model="gpt-oss:20b",
+        model=model,
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": prompt}
@@ -49,8 +46,11 @@ def main():
     logger.info("app_start")
 
     st.set_page_config(page_title="Streamlit Starter", page_icon="🎈", layout="centered")
-    st.title("Streamlit Starter")
-    st.write("A minimal Streamlit app with configurable logging.")
+    st.title("Calling OpenAI - with Local Llama_cpp or API")
+
+    model_choice = st.radio("Choose model:", ("Local (llama_cpp)", "API (OpenAI)"))
+    client = client_llama if model_choice == "Local (llama_cpp)" else client_api
+    model = "gpt-oss:20b" if model_choice == "Local (llama_cpp)" else "gpt-5-mini"
 
     question = st.text_input("What is your question?", placeholder="What is the capital of France?")
     if question:
@@ -60,7 +60,7 @@ def main():
         response_container = {}
 
         def fetch_response():
-            response_container['response'] = get_ollama_response(question)
+            response_container['response'] = get_gpt_response(question, client, model)
 
         thread = threading.Thread(target=fetch_response)
         start_time = time.time()
