@@ -7,12 +7,15 @@ from openai import OpenAI
 import threading
 import time
 
+#client = OpenAI(
+#    base_url="http://localhost:11434/v1",  # Ollama's default API endpoint
+#    api_key="ollama"                        # Dummy key, not used by Ollama
+#)
+
 client = OpenAI(
-    base_url="http://localhost:11434/v1",  # Ollama's default API endpoint
-    api_key="ollama"                        # Dummy key, not used by Ollama
+    base_url="http://localhost:8080/v1",  # Llama_cpp's default API endpoint
+    api_key="llama_cpp"                    # Dummy key, not used by Llama_cpp
 )
-
-
 
 
 def configure_logging():
